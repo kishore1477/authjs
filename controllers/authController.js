@@ -27,7 +27,10 @@ const UserData = new User({
     tc:tc
 })
 const UserDataSave = await UserData.save()
-res.send(UserDataSave)
+const findsavedUser =  await User.findOne({email})
+// Generate JWT token 
+const token = jwt.sign({userID:findsavedUser._id}, process.env.JWT_SECRET_KEY,{expiresIn:'5d' })
+res.send({"token":token})
 }else{
     res.status(401).send('Password does not match')
 
@@ -48,7 +51,9 @@ static UserLogin = async (req,res)=>{
             if(user !=null){
                 const isMatch = await bcrypt.compare(password,user.password)
                 if(user.email === email && isMatch){
-                    res.status(200).send("Login successfully")
+                    //  token gnerate for login
+                    const token = jwt.sign({userID:user._id}, process.env.JWT_SECRET_KEY,{expiresIn:'5d' })
+res.status(200).send({"token":token})
                     
                 }else{
                     res.status(200).send("Invalid credentials")
