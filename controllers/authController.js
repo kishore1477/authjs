@@ -2,6 +2,7 @@ import User from "../moddle/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from 'bcrypt'
 import { body, validationResult } from 'express-validator';
+import transporter from "../config/emailConfig.js";
 
 class UserController {
     // User Register
@@ -96,16 +97,34 @@ class UserController {
     static sendEmail = async (req, res) => {
         const { email } = req.body
         if (email) {
+            console.log(email)
+            try {
+               
+           
             const user = await User.findOne({ email })
+            console.log(user)
             if (user) {
                 const secret = user._id + process.env.JWT_SECRET_KEY
                 const token = jwt.sign({ userID: user._id }, secret, { expiresIn: '15m' })
-                const link = `http://127.0.0.1:3000/api/user/reset/${user._id}/${token}`
+                const link = `http://127.0.0.1:8000/api/user/reset/${user._id}/${token}`
                 console.log(link)
+
+                 // Send Email
+        let info =  await transporter.sendMail({
+          from:"kishorejaipal477@gmail.com",
+          to: user.email,
+          subject: "KishoreAuth - Password Reset Link",
+          html: `<a href=${link}>Click Here</a> to Reset Your Password`
+        })
+        console.log(info)
             } else {
                 res.send({ "status": "failed", "message": "Email doesn't exists " })
 
             }
+
+        } catch (error) {
+                res.status(400).json({"message":"Internal error", "Error":error})
+        }
         } else {
             res.send({ "status": "failed", "message": "Email Field is Required" })
         }
