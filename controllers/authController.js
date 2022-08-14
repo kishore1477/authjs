@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt'
 import { body, validationResult } from 'express-validator';
 
 class UserController{
+    // User Register
     static UserRegisteration = async(req,res)=>{
           // handle request body  parameters error
     const errors = validationResult(req);
@@ -69,6 +70,27 @@ res.status(200).send({"token":token})
     } catch (error) {
         
     }
+}
+// user change password 
+static changePassword = async(req,res)=>{
+    const {password, password_confirm}= req.body
+    if(password && password_confirm){
+if(password === password_confirm){
+    const salt =await  bcrypt.genSalt(10)
+    const hashPass = await bcrypt.hash(password,salt)
+    console.log(req.user)
+    await User.findByIdAndUpdate(req.user._id, {$set:{password:hashPass}})
+    res.send("Password changed successfully")
+}else{
+
+    res.status(400).send("password does not  match")
+}
+    }else{
+        res.status(400).send("All fields are required!")
+    }
+}
+static LoggedUserData = (req,res)=>{
+    res.status(200).send(req.user)
 }
 }
 
